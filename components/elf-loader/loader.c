@@ -34,6 +34,7 @@
 #include "unaligned.h"
 
 
+// #define INTERFACE 1
 #if INTERFACE
 #include <stdio.h>
 #include <stdint.h>
@@ -58,8 +59,10 @@ typedef struct ELFLoaderContext_t ELFLoaderContext_t;
 
 #endif
 
+/**
 
-#ifdef __linux__
+
+#ifndef __linux__
 
 #include <malloc.h>
 #define LOADER_ALLOC_EXEC(size) memalign(4, size)
@@ -74,6 +77,8 @@ typedef struct ELFLoaderContext_t ELFLoaderContext_t;
     if(fread(buffer, 1, size, ctx->fd) != size) { assert(0); goto err; }
 
 #else
+ * 
+ */
 
 static const char* TAG = "elfLoader";
 #define MSG(...) ESP_LOGI(TAG,  __VA_ARGS__);
@@ -88,7 +93,7 @@ static const char* TAG = "elfLoader";
 #define LOADER_GETDATA(ctx, off, buffer, size) \
     unalignedCpy(buffer, ctx->fd + off, size);
 
-#endif
+// #endif
 
 typedef struct ELFLoaderSection_t {
     void *data;
@@ -282,7 +287,7 @@ static int relocateSymbol(Elf32_Addr relAddr, int type, Elf32_Addr symAddr, Elf3
             break;
         }
 
-        ERR("Relocation: unknown opcode %08X", v);
+        ERR("Relocation: unknown opcode %08lX", v);
         return -1;
         break;
     }
@@ -359,13 +364,13 @@ static int relocateSection(ELFLoaderContext_t *ctx, ELFLoaderSection_t *s) {
 //            MSG("  %08X %04X %04X %-20s %08X          %08X                    %s + %X", rel.r_offset, symEntry, relType, type2String(relType), relAddr, sym.st_value, name, rel.r_addend);
         } else if ((symAddr == 0xffffffff) && (sym.st_value == 0x00000000)) {
             ERR("Relocation - undefined symAddr: %s", name);
-            MSG("  %08X %04X %04X %-20s %08X %08X %08X                    %s + %X", rel.r_offset, symEntry, relType, type2String(relType), relAddr, symAddr, sym.st_value, name, rel.r_addend);
+            MSG("  %08lX %04X %04X %-20s %08lX %08lX %08lX                    %s + %lX", rel.r_offset, symEntry, relType, type2String(relType), relAddr, symAddr, sym.st_value, name, rel.r_addend);
             r = -1;
         } else if(relocateSymbol(relAddr, relType, symAddr, sym.st_value, &from, &to) != 0) {
-            ERR("  %08X %04X %04X %-20s %08X %08X %08X %08X->%08X %s + %X", rel.r_offset, symEntry, relType, type2String(relType), relAddr, symAddr, sym.st_value, from, to, name, rel.r_addend);
+            ERR("  %08lX %04X %04X %-20s %08lX %08lX %08lX %08lX->%08lX %s + %lX", rel.r_offset, symEntry, relType, type2String(relType), relAddr, symAddr, sym.st_value, from, to, name, rel.r_addend);
             r = -1;
         } else {
-            MSG("  %08X %04X %04X %-20s %08X %08X %08X %08X->%08X %s + %X", rel.r_offset, symEntry, relType, type2String(relType), relAddr, symAddr, sym.st_value, from, to, name, rel.r_addend);
+            MSG("  %08lX %04X %04X %-20s %08lX %08lX %08lX %08lX->%08lX %s + %lX", rel.r_offset, symEntry, relType, type2String(relType), relAddr, symAddr, sym.st_value, from, to, name, rel.r_addend);
         }
     }
     return r;
@@ -468,19 +473,19 @@ ELFLoaderContext_t* elfLoaderInitLoadAndRelocate(LOADER_FD_T fd, const ELFLoader
                     if (strcmp(name, ".text") == 0) {
                         ctx->text = section->data;
                     }
-                    MSG("  section %2d: %-15s %08X %6i", n, name, (unsigned int) section->data, sectHdr.sh_size);
+                    MSG("  section %2d: %-15s %08X %6li", n, name, (unsigned int) section->data, sectHdr.sh_size);
                 }
             } else if (sectHdr.sh_type == SHT_RELA) {
                 if (sectHdr.sh_info >= n) {
-                    ERR("Rela section: bad linked section (%i:%s -> %i)", n, name, sectHdr.sh_info);
+                    ERR("Rela section: bad linked section (%i:%s -> %li)", n, name, sectHdr.sh_info);
                     goto err;
                 }
                 ELFLoaderSection_t* section = findSection(ctx, sectHdr.sh_info);
                 if (section == NULL) {
-                    MSG("  section %2d: %-15s -> %2d: ignoring", n, name, sectHdr.sh_info);
+                    MSG("  section %2d: %-15s -> %2ld: ignoring", n, name, sectHdr.sh_info);
                 } else {
                     section->relSecIdx = n;
-                    MSG("  section %2d: %-15s -> %2d: ok", n, name, sectHdr.sh_info);
+                    MSG("  section %2d: %-15s -> %2ld: ok", n, name, sectHdr.sh_info);
                 }
             } else {
                 MSG("  section %2d: %s", n, name);
@@ -531,13 +536,13 @@ int elfLoaderSetFunc(ELFLoaderContext_t *ctx, const char* funcname) {
         if(strcmp(name, funcname) == 0) {
             Elf32_Addr symAddr = findSymAddr(ctx, &sym, name);
             if (symAddr == 0xffffffff) {
-                MSG("  %04X %-30s %04X %08X %04X ????????", symCount, name, sym.st_shndx, sym.st_value, sym.st_size);
+                MSG("  %04X %-30s %04X %08lX %04lX ????????", symCount, name, sym.st_shndx, sym.st_value, sym.st_size);
             } else {
                 ctx->exec = (void*)symAddr;
-                MSG("  %04X %-30s %04X %08X %04X %08X", symCount, name, sym.st_shndx, sym.st_value, sym.st_size, symAddr);
+                MSG("  %04X %-30s %04X %08lX %04lX %08lX", symCount, name, sym.st_shndx, sym.st_value, sym.st_size, symAddr);
             }
         } else {
-            MSG("  %04X %-30s %04X %08X %04X", symCount, name, sym.st_shndx, sym.st_value, sym.st_size);
+            MSG("  %04x %-30s %04x %08lx %04lx", symCount, name, sym.st_shndx, sym.st_value, sym.st_size);
         }
     }
     if (ctx->exec == 0) {
