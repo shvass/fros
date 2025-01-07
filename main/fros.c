@@ -3,9 +3,7 @@
 // #include "esp_console.h"
 // #include "esp_vfs_dev.h"
 #include "loader.h"
-#include "payload.h"
-
-
+#include "../payload/payload-array.h"
 
 static const char* TAG = "main";
 
@@ -20,7 +18,7 @@ static const ELFLoaderEnv_t env = { exports, sizeof(exports) / sizeof(*exports) 
 void app_main(void) {
     ESP_LOGI(TAG, "Let's go!\n");
 
-    ELFLoaderContext_t* ctx = elfLoaderInitLoadAndRelocate(example_payload_payload_elf, &env);
+    ELFLoaderContext_t* ctx = elfLoaderInitLoadAndRelocate(payload_elf, &env);
     if (!ctx) {
         ESP_LOGI(TAG, "elfLoaderInitLoadAndRelocate error");
         return;

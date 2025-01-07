@@ -5,3 +5,6 @@ out/
 
 .vscode/
 test/
+
+payload/*.elf
+payload/*.txt
