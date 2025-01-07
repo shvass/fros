@@ -1,0 +1,7 @@
+sdkconfig
+
+build/
+out/
+
+.vscode/
+test/
