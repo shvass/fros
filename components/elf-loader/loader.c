@@ -34,52 +34,6 @@
 #include "unaligned.h"
 
 
-// #define INTERFACE 1
-#if INTERFACE
-#include <stdio.h>
-#include <stdint.h>
-
-#ifdef __linux__
-#define LOADER_FD_T FILE *
-#else
-#define LOADER_FD_T void*
-#endif
-
-typedef struct {
-    const char *name; /*!< Name of symbol */
-    void *ptr; /*!< Pointer of symbol in memory */
-} ELFLoaderSymbol_t;
-
-typedef struct {
-    const ELFLoaderSymbol_t *exported; /*!< Pointer to exported symbols array */
-    unsigned int exported_size; /*!< Elements on exported symbol array */
-} ELFLoaderEnv_t;
-
-typedef struct ELFLoaderContext_t ELFLoaderContext_t;
-
-#endif
-
-/**
-
-
-#ifndef __linux__
-
-#include <malloc.h>
-#define LOADER_ALLOC_EXEC(size) memalign(4, size)
-#define LOADER_ALLOC_DATA(size) memalign(4, size)
-
-#define MSG(...) printf(__VA_ARGS__); printf("\n");
-//#define ERR(...) printf(__VA_ARGS__); printf("\n"); assert(0);
-#define ERR(...) printf(__VA_ARGS__); printf("\n");
-
-#define LOADER_GETDATA(ctx, off, buffer, size) \
-    if(fseek(ctx->fd, off, SEEK_SET) != 0) { assert(0); goto err; }\
-    if(fread(buffer, 1, size, ctx->fd) != size) { assert(0); goto err; }
-
-#else
- * 
- */
-
 static const char* TAG = "elfLoader";
 #define MSG(...) ESP_LOGI(TAG,  __VA_ARGS__);
 #define ERR(...) ESP_LOGE(TAG,  __VA_ARGS__);
@@ -93,7 +47,6 @@ static const char* TAG = "elfLoader";
 #define LOADER_GETDATA(ctx, off, buffer, size) \
     unalignedCpy(buffer, ctx->fd + off, size);
 
-// #endif
 
 typedef struct ELFLoaderSection_t {
     void *data;
@@ -184,7 +137,9 @@ static int relocateSymbol(Elf32_Addr relAddr, int type, Elf32_Addr symAddr, Elf3
         }
     }
     switch (type) {
-    case R_XTENSA_32: {
+    case R_XTENSA_32: 
+    case R_XTENSA_PLT:
+    {
         *from = unalignedGet32((void*)relAddr);
         *to  = symAddr + *from;
         unalignedSet32((void*)relAddr, *to);

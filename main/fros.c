@@ -2,16 +2,24 @@
 #include "esp_log.h"
 // #include "esp_console.h"
 // #include "esp_vfs_dev.h"
+
 #include "loader.h"
+// #include "payload.h"
 #include "../payload/payload-array.h"
 
+
 static const char* TAG = "main";
+
+
+int test_func(int vvz) { return  vvz; }
 
 
 static const ELFLoaderSymbol_t exports[] = {
     { "puts", (void*) puts },
     { "printf", (void*) printf },
+    { "test_func", (void*) test_func },
 };
+
 static const ELFLoaderEnv_t env = { exports, sizeof(exports) / sizeof(*exports) };
 
 

@@ -1,24 +1,12 @@
 
-
-// int puts(char* str);
-
-// int printfl(){
-//     return 2000;
-
-// }
-
-// int local_main(){
-//    puts("hello world");
-//     return printfl();
-// };
-
-
 #include <stdio.h>
 #include <stdint.h>
+int test_func(int vvz);
 
 
-uint32_t local_main(uint32_t arg) {
+int local_main(int arg) {
     printf("Hello world!\n");
     printf("It works!\n");
-    return 0;
+    return test_func(4553);
+    // return ftv();
 }

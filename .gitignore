@@ -1,10 +1,15 @@
+# esp idf configs
 sdkconfig
 
+# build outputs
 build/
 out/
+**.out
 
+# IDE / configs
 .vscode/
 test/
 
+# payload temps
 payload/*.elf
 payload/*.txt
