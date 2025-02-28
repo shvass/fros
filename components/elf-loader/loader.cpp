@@ -48,31 +48,6 @@ static const char* TAG = "elfLoader";
     unalignedCpy(buffer, ctx->fd + off, size);
 
 
-typedef struct ELFLoaderSection_t {
-    void *data;
-    int secIdx;
-    size_t size;
-    off_t relSecIdx;
-    struct ELFLoaderSection_t* next;
-} ELFLoaderSection_t;
-
-struct ELFLoaderContext_t {
-    LOADER_FD_T fd;
-    void* exec;
-    void* text;
-    const ELFLoaderEnv_t *env;
-
-    size_t e_shnum;
-    off_t e_shoff;
-    off_t shstrtab_offset;
-
-    size_t symtab_count;
-    off_t symtab_offset;
-    off_t strtab_offset;
-
-    ELFLoaderSection_t* section;
-};
-
 
 /*** Read data functions ***/
 
@@ -139,6 +114,8 @@ static int relocateSymbol(Elf32_Addr relAddr, int type, Elf32_Addr symAddr, Elf3
     switch (type) {
     case R_XTENSA_32: 
     case R_XTENSA_PLT:
+    case 14:
+    case 59:
     {
         *from = unalignedGet32((void*)relAddr);
         *to  = symAddr + *from;
@@ -307,7 +284,7 @@ static int relocateSection(ELFLoaderContext_t *ctx, ELFLoaderSection_t *s) {
     for (size_t relCount = 0; relCount < relEntries; relCount++) {
         LOADER_GETDATA(ctx, sectHdr.sh_offset + relCount * (sizeof(rel)), &rel, sizeof(rel))
         Elf32_Sym sym;
-        char name[33] = "<unnamed>";
+        char name[100] = "<unnamed>";
         int symEntry = ELF32_R_SYM(rel.r_info);
         int relType = ELF32_R_TYPE(rel.r_info);
         Elf32_Addr relAddr = ((Elf32_Addr) s->data) + rel.r_offset;		// data to be updated adress
@@ -363,7 +340,7 @@ ELFLoaderContext_t* elfLoaderInitLoadAndRelocate(LOADER_FD_T fd, const ELFLoader
         MSG("  %08X %s", (unsigned int) env->exported[i].ptr, env->exported[i].name);
     }
 
-    ELFLoaderContext_t* ctx = malloc(sizeof(ELFLoaderContext_t));
+    ELFLoaderContext_t* ctx = (ELFLoaderContext_t*) malloc(sizeof(ELFLoaderContext_t));
     assert(ctx);
 
     memset(ctx, 0, sizeof(ELFLoaderContext_t));
@@ -406,7 +383,7 @@ ELFLoaderContext_t* elfLoaderInitLoadAndRelocate(LOADER_FD_T fd, const ELFLoader
                 if (!sectHdr.sh_size) {
                     MSG("  section %2d: %-15s no data", n, name);
                 } else {
-                    ELFLoaderSection_t* section = malloc(sizeof(ELFLoaderSection_t));
+                    ELFLoaderSection_t* section = (ELFLoaderSection_t*) malloc(sizeof(ELFLoaderSection_t));
                     assert(section);
                     memset(section, 0, sizeof(ELFLoaderSection_t));
                     section->next = ctx->section;
@@ -466,7 +443,7 @@ ELFLoaderContext_t* elfLoaderInitLoadAndRelocate(LOADER_FD_T fd, const ELFLoader
         }
         if (r != 0) {
             MSG("Relocation failed");
-            goto err;
+            // goto err;
         }
     }
     return ctx;

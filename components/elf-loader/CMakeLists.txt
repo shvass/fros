@@ -1,2 +1,2 @@
-idf_component_register(SRCS "loader.c" "unaligned.c" 
+idf_component_register(SRCS "loader.cpp" "unaligned.cpp" 
                     INCLUDE_DIRS "include")

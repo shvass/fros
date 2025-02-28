@@ -1,5 +1,6 @@
 # esp idf configs
 sdkconfig
+sdkconfig.old
 
 # build outputs
 build/
@@ -13,3 +14,6 @@ test/
 # payload temps
 payload/*.elf
 payload/*.txt
+
+
+managed_components/
