@@ -7,7 +7,6 @@
 #include "../payload/payload-array.h"
 
 #include <urosHandler.hpp>
-#include <urosLoader.hpp>
 
 
 static const char* TAG = "main";

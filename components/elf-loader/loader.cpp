@@ -34,7 +34,7 @@
 #include "unaligned.h"
 
 
-static const char* TAG = "elfLoader";
+static const char* TAG = "fros-loader";
 #define MSG(...) ESP_LOGI(TAG,  __VA_ARGS__);
 #define ERR(...) ESP_LOGE(TAG,  __VA_ARGS__);
 

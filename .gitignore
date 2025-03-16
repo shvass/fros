@@ -14,6 +14,8 @@ test/
 # payload temps
 payload/*.elf
 payload/*.txt
+payload/*.h
 
 
 managed_components/
+dependencies.lock
