@@ -17,8 +17,10 @@
 
 #include <urosHandler.hpp>
 
+#define MAX_LOAD_FAIL 5
+#define FAIL_BOOT_WAIT_MS 10000
 
-static const char* TAG = "main";
+static const char* TAG = "fros-master";
 
 esp_vfs_spiffs_conf_t conf = {
     .base_path = "/overlays",
@@ -85,6 +87,13 @@ void save_overlay_to_file(char* id, char* buffer, size_t size){
 void elf_passover(char* bin, size_t size, bool save = false);
 
 
+struct startUpConfig : public storable
+{
+    startUpConfig() : storable("startup", sizeof(startUpConfig)) { load(); }
+
+    int failCount = 0;
+};
+
 
 urosHandler* rosHandler = nullptr;
 extern "C" void app_main(void) {
@@ -93,17 +102,21 @@ extern "C" void app_main(void) {
     init_fs();
 
 
-    urosHandler::config cfg = {
-        // .node_name = "fros",
-        .mode = urosHandler::config::TRANSPORT_USB,
-    };
+    // urosHandler::config cfg = {
+    //     // .node_name = "fros",
+    //     .mode = urosHandler::config::TRANSPORT_USB,
+    // };
 
-    
-    rosHandler = new urosHandler(cfg);
+    startUpConfig cfg;
+    cfg.failCount++;
+    cfg.write();
+    ESP_LOGD(TAG, "boot fail count %d", cfg.failCount);
+
+    rosHandler = new urosHandler();
 
     rosHandler->addThreadExecutor({
         // new urosLoader(),
-    }, APP_CPU_NUM
+    }, PRO_CPU_NUM
     );
 
 
@@ -118,7 +131,7 @@ extern "C" void app_main(void) {
     struct stat ovStat;
     char* buffer;
 
-    if (dp != NULL){
+    if (dp != NULL && cfg.failCount < MAX_LOAD_FAIL){
         while ((ep = readdir (dp))) {
             std::string filePath = overlay_dir + std::string("/") + ep->d_name;
             stat(filePath.c_str(), &ovStat);
@@ -139,5 +152,11 @@ extern "C" void app_main(void) {
     }
     else
         ESP_LOGI(TAG, "Couldn't open the directory");
+
+
+
+    vTaskDelay(pdMS_TO_TICKS(FAIL_BOOT_WAIT_MS));
+    cfg.failCount = 0;
+    cfg.write();
 
 }
