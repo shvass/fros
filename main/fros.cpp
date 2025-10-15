@@ -102,17 +102,16 @@ extern "C" void app_main(void) {
     init_fs();
 
 
-    // urosHandler::config cfg = {
-    //     // .node_name = "fros",
-    //     .mode = urosHandler::config::TRANSPORT_USB,
-    // };
+    urosHandler::config urosCfg;
+    // urosCfg.node_name = "fros";
+    urosCfg.mode = urosHandler::config::TRANSPORT_UART;
 
     startUpConfig cfg;
     cfg.failCount++;
     cfg.write();
     ESP_LOGD(TAG, "boot fail count %d", cfg.failCount);
 
-    rosHandler = new urosHandler();
+    rosHandler = new urosHandler(urosCfg);
 
     rosHandler->addThreadExecutor({
         // new urosLoader(),
