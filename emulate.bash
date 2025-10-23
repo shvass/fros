@@ -1,5 +1,14 @@
 #! /bin/bash
 
+set -e
+
+# Check if ESP-IDF environment is sourced
+if [ -z "$IDF_PATH" ] || [ -z "$IDF_PYTHON_ENV_PATH" ]; then
+    echo "ESP-IDF environment not detected!"
+    echo "Please source the ESP-IDF environment before running this script"
+    exit 1
+fi
+
 # rebuild binary image
 esptool.py --chip=esp32s3 merge_bin \
 --output=$(pwd)/build/qemu_flash.bin \
