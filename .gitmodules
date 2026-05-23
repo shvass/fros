@@ -6,3 +6,7 @@
 	path = components/embed-ros
 	url = git@github.com:VIIT-Robotics-Club/embed-ros.git
 	branch = feature/parameterServer
+[submodule "components/elf-parser"]
+	path = components/elf-parser
+	url = https://github.com/shvass/elf-parser
+	branch = main
